@@ -30,8 +30,11 @@ class SerializedDirectory extends AbstractLocalStore
      * @param $id
      * @return string
      */
-    protected function getFileName($id) {
-        return $this->filename . DIRECTORY_SEPARATOR . $id . '.cache.txt';
+    protected function getFileName($id)
+    {
+        // @TODO: $id is unsanitized user input, clean it up in a way that is more readable w/o backend
+        // (the md5() hash here is an ugly hack which avoids directory traversal)
+        return $this->filename . DIRECTORY_SEPARATOR . md5($id) . '.cache.txt';
     }
 
     /**
