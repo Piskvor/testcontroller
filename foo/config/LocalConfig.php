@@ -32,6 +32,7 @@ class LocalConfig implements IConfig
             'product.count.port' => 3306,
             'product.count.user' => 'foo',
             'product.count.pass' => 'bar', /* TODO: store safer - beyond the scope of this example */
+            'product.count.db' => 'product_count'
         ],
         'prodMysql' => [
             'cache.backend' => 'SerializedDirectory',

@@ -7,6 +7,7 @@ use foo\config\IConfig;
 use foo\exceptions\InvalidParameterException;
 use foo\models\cache\SearchFrontend;
 use foo\models\Product\ISearch;
+use foo\models\product\PopularityKeeperFrontend;
 use foo\models\Product\SearchElasticDb;
 use foo\models\Product\SearchMysql;
 
@@ -67,5 +68,39 @@ class RegistryHelper
         $cacheBackend->injectConfig($config);
 
         return new SearchFrontend($searchDriver, $cacheBackend);
+    }
+
+    /**
+     * @param IConfig $config
+     * @return PopularityKeeperFrontend
+     * @throws InvalidParameterException
+     */
+    public static function getPopularityKeeper(IConfig $config)
+    {
+        $popKeeperName = $config->getItem('product.count');
+        // again, autoloading would be useful
+        switch ($popKeeperName) { //
+            case 'SerializedDirectory':
+                $popularityKeeperBackend = new \foo\models\datastore\SerializedDirectory($config->getItem('product.count.location'));
+                break;
+            case 'PhpSerializedFile':
+                $popularityKeeperBackend = new \foo\models\datastore\PhpSerializedFile($config->getItem('product.count.location'));
+                break;
+            case 'JsonFile':
+                $popularityKeeperBackend = new \foo\models\datastore\JsonFile($config->getItem('product.count.location'));
+                break;
+            case 'Memcache':
+                $popularityKeeperBackend = new \foo\models\datastore\Memcache();
+                break;
+            case 'RabbitMQ':
+                $popularityKeeperBackend = new \foo\models\datastore\RabbitMQ();
+                break;
+            default:
+                throw new InvalidParameterException('Unknown popularity keeper:' . $popKeeperName);
+        }
+        $popularityKeeperBackend->injectConfig($config);
+
+        return new PopularityKeeperFrontend($popularityKeeperBackend);
+
     }
 }

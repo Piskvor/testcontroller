@@ -5,6 +5,7 @@ namespace foo\controllers;
 use foo\config\IConfig;
 use foo\helpers\RegistryHelper;
 use foo\models\cache\SearchFrontend;
+use foo\models\product\PopularityKeeperFrontend;
 use vendor\db\IElasticSearchDriver;
 use vendor\db\IMySQLDriver;
 
@@ -13,6 +14,9 @@ class ProductController
 
     /** @var SearchFrontend - transparent cache for the search driver */
     private $cachedSearchDriver;
+
+    /** @var PopularityKeeperFrontend - transparent cache for the search driver */
+    private $popularityKeeper;
 
     /**
      * ProductController constructor. The classes in config would probably be instantiated by FW and injected directly;
@@ -27,10 +31,12 @@ class ProductController
         // note: although we could make the switch between the drivers as-needed when searching,
         // searchDriver presents a unified facade from the different drivers
         // so we don't need to keep the selection logic around, and we go through it exactly once
-        // plus we don't need to keep the other driver
+        // plus we don't need to keep the other driver(s), and can add more if needed
         $searchDriver = RegistryHelper::getSearchDriver($config, $elasticSearchDriver, $mySQLDriver);
 
         $this->cachedSearchDriver = RegistryHelper::getSearchCache($config, $searchDriver);
+
+        $this->popularityKeeper = RegistryHelper::getPopularityKeeper($config);
     }
 
     /**
@@ -39,10 +45,27 @@ class ProductController
      */
     public function detailAction($id)
     {
-        // TODO: HTTP caching?
-        // TODO: cached result
-        // TODO: uncached result
-        // TODO: JSON output
+        if ($this->getHeader('HTTP_IF_MODIFIED_SINCE')) { // user's browser already has this
+            $this->popularityKeeper->increment($id);
+            header('HTTP/1.1 304 Not Modified');
+        } else { // new user
+            $result = $this->cachedSearchDriver->fetch($id);
+            if ($result) { // we get data! (we don't know whence they came - cache,MySQL,ES - but we don't care)
+                $this->popularityKeeper->increment($id);
+                header('Content-Type: application/json');
+                return json_encode($result);
+            } else { // Will never ever be needed? At least for testing backends, let's keep this in.
+                header('HTTP/1.1 404 Not Found');
+            }
+        }
+        return ''; // if we are here, there is no (new) data to send anyway
     }
 
+    protected function getHeader($headerName) {
+        if (!isset($_SERVER[$headerName])) {
+            return null;
+        } else {
+            return $_SERVER[$headerName];
+        }
+    }
 }
