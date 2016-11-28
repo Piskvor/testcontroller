@@ -3,14 +3,15 @@
 foo_autoloader_init(); // let's not require() everything manually
 
 $environment = 'dev'; // abracadabra. Normally, we would infer this, or set it in a local file not present in Git.
+
 // we are passing in a string which specifies the environment - again, there are more elegant ways to do this.
 $config = new \foo\config\LocalConfig($environment);
 
-// NOTE: these two undefined variables would be provided by the framework
-/** @noinspection PhpUndefinedVariableInspection */
+// NOTE: the two undefined variables would normally be provided by the framework
 $controller = new \foo\controllers\ProductController($config, $esDriver, $mysqlDriver);
 
-echo $controller->detailAction('lorem-ipsum');
+$productId = 'lorem-ipsum';
+echo $controller->detailAction($productId);
 
 exit;
 

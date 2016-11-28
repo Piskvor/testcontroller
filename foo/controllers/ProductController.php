@@ -26,8 +26,11 @@ class ProductController
      * @param IMySQLDriver|NULL $mySQLDriver - external MySQL driver if give
      * @throws \foo\exceptions\InvalidParameterException
      */
-    public function __construct(IConfig $config, IElasticSearchDriver $elasticSearchDriver = null, IMySQLDriver $mySQLDriver = null)
-    {
+    public function __construct(
+        IConfig $config,
+        IElasticSearchDriver $elasticSearchDriver = null,
+        IMySQLDriver $mySQLDriver = null
+    ) {
         // note: although we could make the switch between the drivers as-needed when searching,
         // searchDriver presents a unified facade from the different drivers
         // so we don't need to keep the selection logic around, and we go through it exactly once
@@ -45,14 +48,15 @@ class ProductController
      */
     public function detailAction($id)
     {
-        if ($this->getHeader('HTTP_IF_MODIFIED_SINCE')) { // user's browser already has this
+        if ($this->getRequestHeader('HTTP_IF_MODIFIED_SINCE')) { // user's browser already has this resource
             $this->popularityKeeper->increment($id);
             header('HTTP/1.1 304 Not Modified');
-        } else { // new user
+        } else { // this resource is not seen by the user
             $result = $this->cachedSearchDriver->fetch($id);
             if ($result) { // we get data! (we don't know whence they came - cache,MySQL,ES - but we don't care)
                 $this->popularityKeeper->increment($id);
                 header('Content-Type: application/json');
+                header('Last-Modified: ' . date('r')); // this gets us the above header on subsequent requests
                 return json_encode($result);
             } else { // Will never ever be needed? At least for testing backends, let's keep this in.
                 header('HTTP/1.1 404 Not Found');
@@ -61,7 +65,13 @@ class ProductController
         return ''; // if we are here, there is no (new) data to send anyway
     }
 
-    protected function getHeader($headerName) {
+    /**
+     * Simulates a FW abstraction from superglobals
+     * @param $headerName
+     * @return null
+     */
+    protected function getRequestHeader($headerName)
+    {
         if (!isset($_SERVER[$headerName])) {
             return null;
         } else {

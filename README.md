@@ -27,3 +27,5 @@ The intended flow of action, as seen in `foo\index.php`:
 - popularity keeper is incremented
     - this is non-atomic for the file-storage, race conditions are possible; consider using one of the atomic backends (RabbitMQ or MySQL)
 - result is sent to the client as JSON
+
+Note that some the cache backends are also usable as popularity keeper backends - the similarity here is sufficient to warrant interchangeability. Actual usage would necessitate a refactor here, at least for exposing r/w capability and config handling.  
