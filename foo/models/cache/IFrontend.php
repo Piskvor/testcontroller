@@ -12,7 +12,7 @@ interface IFrontend
 {
 
     /**
-     * @param IFetchable $fetchable - an interface to fetch the uncached data from
+     * @param IFetchable $fetchable - an external interface from which to fetch the uncached data
      * @return void
      */
     public function setSource(IFetchable $fetchable);

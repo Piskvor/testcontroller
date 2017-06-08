@@ -52,9 +52,9 @@ class SearchFrontend implements IFrontend
     public function fetch($id)
     {
         $result = $this->cacheDatastore->fetch($id);
-        if (!$result) { // not in cache
+        if (!$result) { // not in cache - we are not expecting a falsy result, ever
             $result = $this->searchDatastore->fetch($id);
-            if ($result) { // and exists in backend
+            if ($result) { // and exists in backend - again, the backend is not expected to return a falsy value
                 $this->cacheDatastore->save($id, $result);
             }
         }

@@ -47,7 +47,7 @@ class RegistryHelper
     public static function getSearchCache(IConfig $config, ISearch $searchDriver)
     {
         $searchDriverName = $config->getItem('cache.backend');
-        // again, autoloading would be useful
+        // autoloading would be useful here, but overkill for now
         switch ($searchDriverName) { //
             case 'Memcache':
                 $cacheBackend = new \foo\models\datastore\Memcache();
