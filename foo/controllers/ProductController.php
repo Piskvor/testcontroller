@@ -19,7 +19,7 @@ class ProductController
     private $popularityKeeper;
 
     /**
-     * ProductController constructor. The classes in config would probably be instantiated by FW and injected directly;
+     * ProductController constructor. The classes in config would probably be instantiated by the framework and injected directly;
      * we are foregoing a registry implementation in this example for the sake of brevity.
      * @param IConfig $config set of config values for the
      * @param IElasticSearchDriver|NULL $elasticSearchDriver - external ES driver if given
@@ -48,7 +48,7 @@ class ProductController
      */
     public function detailAction($id)
     {
-        if ($this->getRequestHeader('HTTP_IF_MODIFIED_SINCE')) { // user's browser already has this resource
+        if ($this->getRequestHeader('HTTP_IF_MODIFIED_SINCE')) { // user's browser already has this resource, and in this case, the resource never expires
             $this->popularityKeeper->increment($id);
             header('HTTP/1.1 304 Not Modified');
         } else { // this resource is not seen by the user
@@ -59,10 +59,24 @@ class ProductController
                 header('Last-Modified: ' . date('r')); // this gets us the above header on subsequent requests
                 return json_encode($result);
             } else { // Will never ever be needed? At least for testing backends, let's keep this in.
+                // @todo: We could be incrementing popularity counters for nonexistent ids, could be useful for statistics?
                 header('HTTP/1.1 404 Not Found');
             }
         }
         return ''; // if we are here, there is no (new) data to send anyway
+    }
+
+    /**
+     * Get a popularity score for the given id
+     * @param $id
+     * @return string - JSON result
+     */
+    public function popularityAction($id) {
+        $result = array(
+            'score' => $this->popularityKeeper->getScore($id)
+        );
+        header('Content-Type: application/json');
+        return json_encode($result);
     }
 
     /**
