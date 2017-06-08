@@ -42,7 +42,7 @@ class LocalConfig implements IConfig
 
             'product.count' => 'RabbitMQ',
             'rabbitmq.host' => 'localhost',
-            'rabbitmq.port' => 3306,
+            'rabbitmq.port' => 5672,
             'rabbitmq.user' => 'baz',
             'rabbitmq.pass' => 'quux', /* TODO: store safer - beyond the scope of this example */
             'rabbitmq.channel' => 'productSearchUp',
